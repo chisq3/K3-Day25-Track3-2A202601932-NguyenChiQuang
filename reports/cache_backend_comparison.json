@@ -1,0 +1,64 @@
+{
+  "workload": {
+    "requests": 100,
+    "concurrency": 1,
+    "random_seed": 202601932,
+    "mode": "cold-cache sequential comparison"
+  },
+  "memory": {
+    "total_requests": 100,
+    "successful_requests": 100,
+    "failed_requests": 0,
+    "availability": 1.0,
+    "error_rate": 0.0,
+    "latency_p50_ms": 2.12,
+    "latency_p95_ms": 235.36,
+    "latency_p99_ms": 239.39,
+    "fallback_success_rate": 0.0,
+    "cache_hit_rate": 0.68,
+    "circuit_open_count": 0,
+    "recovery_time_ms": null,
+    "estimated_cost": 0.01936,
+    "estimated_cost_saved": 0.04008,
+    "duration_ms": 7035.77,
+    "throughput_rps": 14.21,
+    "route_counts": {
+      "primary": 32,
+      "cache_hit": 68
+    },
+    "provider_successes": {
+      "primary": 32
+    }
+  },
+  "redis": {
+    "total_requests": 100,
+    "successful_requests": 100,
+    "failed_requests": 0,
+    "availability": 1.0,
+    "error_rate": 0.0,
+    "latency_p50_ms": 1.48,
+    "latency_p95_ms": 239.52,
+    "latency_p99_ms": 249.06,
+    "fallback_success_rate": 0.0,
+    "cache_hit_rate": 0.68,
+    "circuit_open_count": 0,
+    "recovery_time_ms": null,
+    "estimated_cost": 0.01936,
+    "estimated_cost_saved": 0.04008,
+    "duration_ms": 7138.92,
+    "throughput_rps": 14.01,
+    "route_counts": {
+      "primary": 32,
+      "cache_hit": 68
+    },
+    "provider_successes": {
+      "primary": 32
+    }
+  },
+  "delta_redis_minus_memory": {
+    "latency_p50_ms": -0.64,
+    "latency_p95_ms": 4.16,
+    "throughput_rps": -0.2,
+    "cache_hit_rate": 0.0
+  }
+}

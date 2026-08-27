@@ -1,0 +1,4 @@
+mode,total_requests,successful_requests,failed_requests,availability,error_rate,latency_p50_ms,latency_p95_ms,latency_p99_ms,fallback_success_rate,cache_hit_rate,circuit_open_count,recovery_time_ms,estimated_cost,estimated_cost_saved,duration_ms,throughput_rps,route_counts,provider_successes,speedup
+sequential,100,100,0,1.0,0.0,226.14,247.83,251.96,0.0,0.0,0,,0.06059,0.0,22280.13,4.49,"{""primary"": 100}","{""primary"": 100}",
+concurrent,100,100,0,1.0,0.0,234.01,439.74,592.38,0.0,0.0,0,,0.06059,0.0,3398.18,29.43,"{""primary"": 100}","{""primary"": 100}",
+summary,,,,,,,,,,,,,,,,,,,6.56

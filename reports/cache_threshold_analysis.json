@@ -1,0 +1,124 @@
+{
+  "recommended_threshold": 0.9,
+  "pairs": [
+    {
+      "name": "exact",
+      "cached_query": "Explain circuit breaker states",
+      "incoming_query": "Explain circuit breaker states",
+      "should_reuse": true,
+      "score": 1.0,
+      "guarded": false
+    },
+    {
+      "name": "refund_paraphrase",
+      "cached_query": "Summarize the refund policy",
+      "incoming_query": "Summarize refund policy",
+      "should_reuse": true,
+      "score": 0.904534,
+      "guarded": false
+    },
+    {
+      "name": "case_normalization",
+      "cached_query": "Explain Circuit Breaker States",
+      "incoming_query": "explain circuit breaker states",
+      "should_reuse": true,
+      "score": 1.0,
+      "guarded": false
+    },
+    {
+      "name": "unrelated",
+      "cached_query": "Summarize the refund policy",
+      "incoming_query": "What is the weather today?",
+      "should_reuse": false,
+      "score": 0.272727,
+      "guarded": false
+    },
+    {
+      "name": "refund_year_mismatch",
+      "cached_query": "Summarize refund policy for the 2024 deadline",
+      "incoming_query": "Summarize refund policy for the 2026 deadline",
+      "should_reuse": false,
+      "score": 0.944444,
+      "guarded": true
+    },
+    {
+      "name": "tuition_year_mismatch",
+      "cached_query": "What is the tuition fee for the 2024 academic year?",
+      "incoming_query": "What is the tuition fee for the 2025 academic year?",
+      "should_reuse": false,
+      "score": 0.957447,
+      "guarded": true
+    },
+    {
+      "name": "bullet_count_mismatch",
+      "cached_query": "Summarize the admission FAQ in 5 bullets",
+      "incoming_query": "Summarize the admission FAQ in 3 bullets",
+      "should_reuse": false,
+      "score": 0.96875,
+      "guarded": true
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.7,
+      "true_positive": 3,
+      "false_positive": 0,
+      "true_negative": 4,
+      "false_negative": 0,
+      "guarded_false_hits": 3,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.8,
+      "true_positive": 3,
+      "false_positive": 0,
+      "true_negative": 4,
+      "false_negative": 0,
+      "guarded_false_hits": 3,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.85,
+      "true_positive": 3,
+      "false_positive": 0,
+      "true_negative": 4,
+      "false_negative": 0,
+      "guarded_false_hits": 3,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.9,
+      "true_positive": 3,
+      "false_positive": 0,
+      "true_negative": 4,
+      "false_negative": 0,
+      "guarded_false_hits": 3,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.92,
+      "true_positive": 2,
+      "false_positive": 0,
+      "true_negative": 4,
+      "false_negative": 1,
+      "guarded_false_hits": 3,
+      "precision": 1.0,
+      "recall": 0.6667
+    },
+    {
+      "threshold": 0.95,
+      "true_positive": 2,
+      "false_positive": 0,
+      "true_negative": 4,
+      "false_negative": 1,
+      "guarded_false_hits": 2,
+      "precision": 1.0,
+      "recall": 0.6667
+    }
+  ],
+  "known_limitation": "Lexical n-gram similarity cannot detect non-numeric intent changes; production systems should add an intent classifier or embedding-based validation."
+}

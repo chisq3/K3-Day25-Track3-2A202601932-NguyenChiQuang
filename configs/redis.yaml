@@ -11,12 +11,20 @@ circuit_breaker:
   failure_threshold: 3
   reset_timeout_seconds: 2
   success_threshold: 1
+  shared_state_backend: redis
+  redis_url: "redis://localhost:6379/0"
+  redis_prefix: "rl:lab25:cb:"
+  state_ttl_seconds: 300
+  graceful_degradation: true
 cache:
   enabled: true
-  backend: memory          # "memory" (default) or "redis" (requires docker compose up -d)
+  backend: redis
   ttl_seconds: 300
-  similarity_threshold: 0.90  # Best precision/recall on reports/cache_threshold_analysis.json
+  similarity_threshold: 0.90
   redis_url: "redis://localhost:6379/0"
+  redis_prefix: "rl:lab25:"
+  graceful_degradation: true
+  redis_retry_interval_seconds: 0.25
 load_test:
   requests: 100
   concurrency: 8
@@ -25,9 +33,6 @@ budget:
   enabled: true
   max_cost: 0.05
   warning_ratio: 0.80
-
-# Chaos scenarios: each overrides provider fail_rate for targeted testing, including
-# total-outage containment and explicit primary-provider recovery.
 scenarios:
   - name: primary_timeout_100
     description: "Primary provider fails 100% — all traffic should fallback"

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, TypeVar
+from threading import RLock
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -20,9 +22,8 @@ class CircuitOpenError(RuntimeError):
 
 @dataclass(slots=True)
 class CircuitBreaker:
-    """Circuit breaker skeleton.
+    """Thread-safe three-state circuit breaker.
 
-    TODO(student): Implement a production-safe state machine:
     - CLOSED: calls pass through; count failures.
     - OPEN: fail fast until reset timeout elapses.
     - HALF_OPEN: allow a probe; close on success or re-open on failure.
@@ -37,65 +38,92 @@ class CircuitBreaker:
     success_count: int = 0
     opened_at: float | None = None
     transition_log: list[dict[str, str | float]] = field(default_factory=list)
+    _lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        """Reject invalid breaker settings before they reach the state machine."""
+        if not self.name.strip():
+            raise ValueError("Circuit breaker name must not be empty")
+        if self.failure_threshold <= 0:
+            raise ValueError("failure_threshold must be greater than zero")
+        if self.reset_timeout_seconds <= 0:
+            raise ValueError("reset_timeout_seconds must be greater than zero")
+        if self.success_threshold <= 0:
+            raise ValueError("success_threshold must be greater than zero")
 
     def allow_request(self) -> bool:
-        """Return whether a request should be attempted.
+        """Return whether a request should be attempted for the current state."""
+        with self._lock:
+            if self.state in {CircuitState.CLOSED, CircuitState.HALF_OPEN}:
+                return True
 
-        TODO(student): Implement the state-based logic:
-        - CLOSED → always allow
-        - HALF_OPEN → allow (probe request)
-        - OPEN → check if reset_timeout_seconds has elapsed since opened_at
-          - If elapsed: transition to HALF_OPEN (use _transition()) and allow
-          - If not elapsed: deny (return False)
+            # An OPEN breaker without a timestamp cannot prove that its timeout elapsed.
+            if self.opened_at is None:
+                return False
 
-        Use time.monotonic() for elapsed time comparison.
-        """
-        raise NotImplementedError("TODO: implement allow_request()")
+            elapsed = time.monotonic() - self.opened_at
+            if elapsed < self.reset_timeout_seconds:
+                return False
+
+            self.success_count = 0
+            self._transition(CircuitState.HALF_OPEN, "reset_timeout_elapsed")
+            return True
 
     def call(self, fn: Callable[..., T], *args: object, **kwargs: object) -> T:
-        """Call a function through the circuit breaker.
+        """Call a function and update breaker state from its outcome."""
+        if not self.allow_request():
+            raise CircuitOpenError(f"Circuit '{self.name}' is open")
 
-        TODO(student): Implement:
-        1. Check allow_request() — if denied, raise CircuitOpenError
-        2. Try calling fn(*args, **kwargs)
-        3. On success: call record_success() and return the result
-        4. On exception: call record_failure() and re-raise
-        """
-        raise NotImplementedError("TODO: implement call()")
+        # Never hold the state lock while running slow provider code.
+        try:
+            result = fn(*args, **kwargs)
+        except Exception:
+            self.record_failure()
+            raise
+
+        self.record_success()
+        return result
 
     def record_success(self) -> None:
-        """Record a successful call.
+        """Record a successful provider call and close a recovered breaker."""
+        with self._lock:
+            self.failure_count = 0
+            self.success_count += 1
 
-        TODO(student): Implement:
-        1. Reset failure_count to 0
-        2. Increment success_count
-        3. If in HALF_OPEN and success_count >= success_threshold:
-           - Transition to CLOSED with reason "probe_success"
-           - Reset success_count to 0
-        """
-        raise NotImplementedError("TODO: implement record_success()")
+            if (
+                self.state == CircuitState.HALF_OPEN
+                and self.success_count >= self.success_threshold
+            ):
+                self._transition(CircuitState.CLOSED, "probe_success")
+                self.success_count = 0
+                self.opened_at = None
 
     def record_failure(self) -> None:
-        """Record a failed call.
+        """Record a failure, opening or re-opening the breaker when required."""
+        with self._lock:
+            self.failure_count += 1
+            self.success_count = 0
 
-        TODO(student): Implement:
-        1. Increment failure_count, reset success_count to 0
-        2. If in HALF_OPEN state:
-           - Immediately transition to OPEN with reason "probe_failure"
-           - Set opened_at = time.monotonic()
-        3. Else if failure_count >= failure_threshold:
-           - Transition to OPEN with reason "failure_threshold_reached"
-           - Set opened_at = time.monotonic()
-
-        IMPORTANT: HALF_OPEN and threshold cases need DIFFERENT reasons
-        and must be handled separately (if/elif, not combined with or).
-        """
-        raise NotImplementedError("TODO: implement record_failure()")
+            if self.state == CircuitState.HALF_OPEN:
+                self.opened_at = time.monotonic()
+                self._transition(CircuitState.OPEN, "probe_failure")
+            elif (
+                self.state == CircuitState.CLOSED
+                and self.failure_count >= self.failure_threshold
+            ):
+                self.opened_at = time.monotonic()
+                self._transition(CircuitState.OPEN, "failure_threshold_reached")
 
     def _transition(self, new_state: CircuitState, reason: str) -> None:
-        if self.state == new_state:
-            return
-        self.transition_log.append(
-            {"from": self.state.value, "to": new_state.value, "reason": reason, "ts": time.time()}
-        )
-        self.state = new_state
+        with self._lock:
+            if self.state == new_state:
+                return
+            self.transition_log.append(
+                {
+                    "from": self.state.value,
+                    "to": new_state.value,
+                    "reason": reason,
+                    "ts": time.time(),
+                }
+            )
+            self.state = new_state

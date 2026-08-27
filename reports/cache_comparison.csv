@@ -1,0 +1,4 @@
+mode,total_requests,successful_requests,failed_requests,availability,error_rate,latency_p50_ms,latency_p95_ms,latency_p99_ms,fallback_success_rate,cache_hit_rate,circuit_open_count,recovery_time_ms,estimated_cost,estimated_cost_saved,duration_ms,throughput_rps,route_counts,provider_successes
+without_cache,100,100,0,1.0,0.0,206.82,238.37,240.32,0.0,0.0,0,,0.0589,0.0,2723.62,36.72,"{""primary"": 100}","{""primary"": 100}"
+with_cache,100,100,0,1.0,0.0,183.36,237.35,240.29,0.0,0.47,0,,0.03099,0.02785,1498.64,66.73,"{""primary"": 53, ""cache_hit"": 47}","{""primary"": 53}"
+delta,,,,,,-23.46,-1.02,,,0.47,,,-0.02791,,,,,

@@ -1,0 +1,67 @@
+Phase 4 - Chaos, metrics, and concurrency evidence
+Generated: 2026-08-27 (Asia/Ho_Chi_Minh)
+
+Environment
+-----------
+UV_PROJECT_ENVIRONMENT=/home/chisq/.venvs/day25-lab25
+Python 3.11 (uv-managed project environment)
+
+Scoped quality checks
+---------------------
+$ uv run --no-sync ruff check src/reliability_lab/metrics.py src/reliability_lab/chaos.py src/reliability_lab/providers.py src/reliability_lab/config.py scripts/run_chaos.py tests/test_chaos.py
+All checks passed!
+
+$ uv run --no-sync mypy src/reliability_lab/metrics.py src/reliability_lab/chaos.py src/reliability_lab/providers.py src/reliability_lab/config.py scripts/run_chaos.py tests/test_chaos.py
+Success: no issues found in 6 source files
+
+Phase 4 tests and coverage
+--------------------------
+$ uv run --no-sync pytest tests/test_metrics.py tests/test_chaos.py tests/test_todo_requirements.py --cov=reliability_lab.metrics --cov=reliability_lab.chaos --cov-report=term-missing -q
+12 passed, 7 xpassed
+
+Coverage:
+- src/reliability_lab/chaos.py: 90%
+- src/reliability_lab/metrics.py: 97%
+- Combined: 92%
+
+Full repository regression test
+-------------------------------
+$ uv run --no-sync pytest -q
+76 passed, 6 skipped, 7 xpassed in 7.58s
+
+The six skipped tests require a running Redis service and belong to Phase 5.
+The seven XPASS results are the starter repository TODO tests now passing.
+
+Reproducible simulation
+-----------------------
+$ uv run --no-sync python scripts/run_chaos.py
+wrote reports/metrics.json
+wrote reports/metrics.csv
+wrote reports/cache_comparison.json
+wrote reports/cache_comparison.csv
+wrote reports/concurrency_comparison.json
+wrote reports/concurrency_comparison.csv
+
+Chaos result (100 requests per scenario, concurrency=8, seed=202601932):
+- primary_timeout_100: PASS; availability=100%; fallback=43; cache hits=57; circuit opens=1
+- primary_flaky_50: PASS; availability=100%; primary=11; fallback=27; cache hits=62; circuit opens=1
+- all_healthy: PASS; availability=100%; primary=45; cache hits=55; circuit opens=0
+- all_providers_down: PASS; expected failures=100/100; static fallback=100; circuit opens=2
+- primary_recovers: PASS; availability=100%; fallback=25; primary after recovery=75; recovery=2848.98 ms
+
+Aggregate result:
+- requests=500; successes=400; expected failures=100
+- P50=3.47 ms; P95=482.73 ms; P99=524.57 ms
+- cache hit rate=34.8%; circuit open transitions=5
+- estimated cost=$0.104068; estimated cost saved=$0.102250
+- recovery time=2848.98 ms (< 5000 ms SLO)
+
+Cache A/B bonus (same deterministic healthy workload):
+- without cache: hit rate=0%; cost=$0.058900; throughput=36.72 req/s
+- with cache: hit rate=47%; cost=$0.030990; throughput=66.73 req/s
+- observed cost reduction=$0.027910 (47.39%)
+
+Concurrency bonus (same deterministic healthy no-cache workload):
+- 1 worker: 4.73 req/s, duration=21121.24 ms
+- 8 workers: 36.38 req/s, duration=2748.81 ms
+- measured speedup=7.68x

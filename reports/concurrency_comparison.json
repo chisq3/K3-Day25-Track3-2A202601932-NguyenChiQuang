@@ -1,0 +1,53 @@
+{
+  "sequential_workers": 1,
+  "concurrent_workers": 8,
+  "sequential": {
+    "total_requests": 100,
+    "successful_requests": 100,
+    "failed_requests": 0,
+    "availability": 1.0,
+    "error_rate": 0.0,
+    "latency_p50_ms": 214.33,
+    "latency_p95_ms": 235.64,
+    "latency_p99_ms": 239.21,
+    "fallback_success_rate": 0.0,
+    "cache_hit_rate": 0.0,
+    "circuit_open_count": 0,
+    "recovery_time_ms": null,
+    "estimated_cost": 0.06059,
+    "estimated_cost_saved": 0.0,
+    "duration_ms": 21121.24,
+    "throughput_rps": 4.73,
+    "route_counts": {
+      "primary": 100
+    },
+    "provider_successes": {
+      "primary": 100
+    }
+  },
+  "concurrent": {
+    "total_requests": 100,
+    "successful_requests": 100,
+    "failed_requests": 0,
+    "availability": 1.0,
+    "error_rate": 0.0,
+    "latency_p50_ms": 214.32,
+    "latency_p95_ms": 235.57,
+    "latency_p99_ms": 239.34,
+    "fallback_success_rate": 0.0,
+    "cache_hit_rate": 0.0,
+    "circuit_open_count": 0,
+    "recovery_time_ms": null,
+    "estimated_cost": 0.06059,
+    "estimated_cost_saved": 0.0,
+    "duration_ms": 2748.81,
+    "throughput_rps": 36.38,
+    "route_counts": {
+      "primary": 100
+    },
+    "provider_successes": {
+      "primary": 100
+    }
+  },
+  "speedup": 7.68
+}

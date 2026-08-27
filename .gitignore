@@ -3,6 +3,9 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.hypothesis/
+.venv.ntfs-partial/
 *.pyc
+.coverage
 reports/metrics.json
 reports/final_report.md

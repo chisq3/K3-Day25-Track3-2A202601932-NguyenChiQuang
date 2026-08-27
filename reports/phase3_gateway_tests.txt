@@ -1,0 +1,51 @@
+Phase 3 - Reliability Gateway verification
+Date: 2026-08-27
+Python: 3.11.15
+
+Starter contract tests
+Command:
+  uv run --no-sync pytest tests/test_gateway_contract.py -v
+Result:
+  4 passed in 0.75s
+
+Required and bonus tests with coverage
+Command:
+  uv run --no-sync pytest tests/test_gateway_contract.py tests/test_gateway_reliability.py --cov=reliability_lab.gateway --cov-report=term-missing -q
+Result:
+  18 passed in 0.99s
+  gateway.py: 100% coverage (89 statements, 0 missed)
+
+Bonus and hardening evidence
+  - Cache hits short-circuit provider calls.
+  - OPEN breakers skip providers and preserve provider-specific error context.
+  - Successful fallback responses retain provider metadata in cache.
+  - Empty provider chains return a safe static fallback.
+  - Missing breaker configuration fails at construction.
+  - Budget warning routes to the cheapest provider first.
+  - Exhausted budgets are cache-only and never call providers.
+  - Budget tracking is thread-safe under 64 concurrent requests.
+  - Unexpected provider exceptions are not swallowed.
+  - Invalid budgets and negative cost records are rejected.
+
+TODO requirement check
+Command:
+  uv run --no-sync pytest tests/test_todo_requirements.py -k gateway -v
+Result:
+  1 xpassed, 6 deselected in 0.43s
+
+Static quality checks
+Commands:
+  uv run --no-sync ruff check src/reliability_lab/gateway.py src/reliability_lab/config.py src/reliability_lab/chaos.py tests/test_gateway_reliability.py
+  uv run --no-sync mypy src/reliability_lab/gateway.py src/reliability_lab/config.py src/reliability_lab/chaos.py tests/test_gateway_reliability.py
+Results:
+  Ruff: All checks passed
+  mypy: Success, no issues found in 4 source files
+
+Full repository progress after Phase 3
+Command:
+  uv run --no-sync pytest -q
+Result:
+  66 passed, 6 skipped, 1 xfailed, 6 xpassed in 4.27s
+
+There are now zero ordinary test failures. Redis tests remain skipped until the Redis phase,
+and the remaining xfail is metrics CSV export for the Chaos/Metrics phase.

@@ -7,5 +7,5 @@ COPY scripts ./scripts
 COPY configs ./configs
 COPY data ./data
 COPY reports ./reports
-RUN pip install --no-cache-dir -e ".[dev]"
-CMD ["make", "test"]
+RUN pip install --no-cache-dir ".[dev]"
+CMD ["pytest", "-q"]

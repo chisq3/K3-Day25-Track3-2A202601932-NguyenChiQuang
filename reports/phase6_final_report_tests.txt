@@ -1,0 +1,65 @@
+Phase 6 - Final report and submission-quality evidence
+Generated: 2026-08-27 (Asia/Ho_Chi_Minh)
+
+Report generation
+-----------------
+$ uv run --no-sync make report
+python scripts/generate_report.py --metrics reports/metrics.json --out reports/final_report.md
+wrote reports/final_report.md
+
+Final report SHA-256:
+6ef68764f63359737f30a36d17dea0e701be261046fc00f7689fb54e11f5283b
+
+Completion checks
+-----------------
+- 11 numbered report sections generated
+- architecture and routing diagram included
+- complete memory and Redis configuration rationale included
+- cache threshold precision/recall evidence included
+- recoverable and aggregate SLO scopes reported separately
+- P50/P95/P99, availability, cache, cost, circuit, and recovery metrics included
+- memory cache and Redis cache A/B comparisons included
+- Redis shared-state, TTL, privacy, false-hit, and CLI key evidence included
+- five named chaos scenarios have expected/observed/PASS evidence
+- all six repository stretch goals have evidence
+- remaining weakness, production fix, and three next steps included
+- no TODO, student placeholder, or NotImplemented marker in final_report.md
+- metrics.json, redis_metrics.json, and redis_shared_state.json parse as valid JSON
+
+Final repository quality gates
+------------------------------
+$ uv run --no-sync make lint
+All checks passed!
+
+$ uv run --no-sync make typecheck
+Success: no issues found in 9 source files
+
+$ uv run --no-sync make test
+89 passed, 7 xpassed in 6.24s
+
+Redis tests are active and pass; none are skipped. The seven XPASS entries are the
+starter repository TODO tests now passing.
+
+$ uv run --no-sync pytest --cov=reliability_lab --cov-report=term-missing -q
+89 passed, 7 xpassed; total coverage: 93%
+
+$ docker build -t day25-reliability-lab:verify .
+Docker context: 707.61 kB; image built successfully.
+
+$ docker run --rm day25-reliability-lab:verify
+77 passed, 12 skipped, 7 xpassed (Redis-only tests are expected to skip in the standalone
+container; CI supplies a healthy Redis service and runs all 89 tests).
+
+$ uv build --out-dir /tmp/day25-build-verify-20260827
+Source distribution and wheel built successfully; all nine reliability modules are included.
+
+Headline evidence in final report
+---------------------------------
+- five of five chaos scenarios PASS
+- recoverable-scenario availability: 100.00%
+- memory/Redis P95: 482.73 / 652.62 ms (<2500 ms SLO)
+- memory/Redis recovery: 2848.98 / 2973.49 ms (<5000 ms SLO)
+- memory/Redis cache hit rate: 34.80% / 34.00% (>10% SLO)
+- Redis cache A/B cost reduction: 45.93%
+- memory concurrency speedup: 7.68x
+- Redis concurrency speedup: 6.56x

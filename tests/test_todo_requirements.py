@@ -4,10 +4,14 @@ These tests are marked @pytest.mark.todo and @pytest.mark.xfail.
 They will FAIL until students implement the TODOs — that's by design.
 When all xfail tests unexpectedly PASS, the lab is complete.
 """
+import tempfile
+from pathlib import Path
+
 import pytest
 
 from reliability_lab.cache import ResponseCache
-from reliability_lab.circuit_breaker import CircuitBreaker, CircuitOpenError, CircuitState
+from reliability_lab.circuit_breaker import CircuitBreaker, CircuitState
+from reliability_lab.metrics import RunMetrics
 
 
 @pytest.mark.todo
@@ -74,12 +78,11 @@ def test_gateway_routes_through_providers() -> None:
 @pytest.mark.todo
 @pytest.mark.xfail(reason="Students must implement metrics.write_csv()")
 def test_metrics_csv_export() -> None:
-    from reliability_lab.metrics import RunMetrics
-    import tempfile, os
     m = RunMetrics(total_requests=10, successful_requests=8, failed_requests=2, latencies_ms=[100.0])
     m.scenarios = {"baseline": "pass"}
-    path = os.path.join(tempfile.mkdtemp(), "test.csv")
-    m.write_csv(path)
-    assert os.path.exists(path)
-    content = open(path).read()
-    assert "scenario_baseline" in content
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "test.csv"
+        m.write_csv(path)
+        assert path.exists()
+        content = path.read_text(encoding="utf-8")
+        assert "scenario_baseline" in content

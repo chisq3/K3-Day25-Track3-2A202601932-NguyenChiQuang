@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import csv
 import json
+from collections.abc import Iterable
 from pathlib import Path
 from statistics import median
-from typing import Iterable
 
 from pydantic import BaseModel, Field
 
@@ -19,8 +20,12 @@ class RunMetrics(BaseModel):
     recovery_time_ms: float | None = None
     estimated_cost: float = 0.0
     estimated_cost_saved: float = 0.0
+    duration_ms: float = 0.0
     latencies_ms: list[float] = Field(default_factory=list)
+    route_counts: dict[str, int] = Field(default_factory=dict)
+    provider_successes: dict[str, int] = Field(default_factory=dict)
     scenarios: dict[str, str] = Field(default_factory=dict)
+    scenario_metrics: dict[str, dict[str, object]] = Field(default_factory=dict)
 
     @property
     def availability(self) -> float:
@@ -39,12 +44,19 @@ class RunMetrics(BaseModel):
         denom = self.fallback_successes + self.static_fallbacks
         return self.fallback_successes / denom if denom else 0.0
 
+    @property
+    def throughput_rps(self) -> float:
+        duration_seconds = self.duration_ms / 1000.0
+        return self.total_requests / duration_seconds if duration_seconds > 0 else 0.0
+
     def percentile(self, q: float) -> float:
         return percentile(self.latencies_ms, q)
 
     def to_report_dict(self) -> dict[str, object]:
         return {
             "total_requests": self.total_requests,
+            "successful_requests": self.successful_requests,
+            "failed_requests": self.failed_requests,
             "availability": round(self.availability, 4),
             "error_rate": round(self.error_rate, 4),
             "latency_p50_ms": round(self.percentile(50), 2),
@@ -56,26 +68,47 @@ class RunMetrics(BaseModel):
             "recovery_time_ms": self.recovery_time_ms,
             "estimated_cost": round(self.estimated_cost, 6),
             "estimated_cost_saved": round(self.estimated_cost_saved, 6),
+            "duration_ms": round(self.duration_ms, 2),
+            "throughput_rps": round(self.throughput_rps, 2),
+            "route_counts": self.route_counts,
+            "provider_successes": self.provider_successes,
             "scenarios": self.scenarios,
+            "scenario_metrics": self.scenario_metrics,
         }
 
     def write_json(self, path: str | Path) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(json.dumps(self.to_report_dict(), indent=2, ensure_ascii=False))
+        Path(path).write_text(
+            json.dumps(self.to_report_dict(), indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
 
     def write_csv(self, path: str | Path) -> None:
-        """Export metrics to CSV format.
+        """Export a flattened, single-row metrics CSV."""
+        report = self.to_report_dict()
+        scenarios = report.pop("scenarios")
+        if isinstance(scenarios, dict):
+            report.update({f"scenario_{name}": status for name, status in scenarios.items()})
 
-        TODO(student): Implement CSV export:
-        1. Get report dict via self.to_report_dict()
-        2. Flatten the "scenarios" dict: each scenario becomes "scenario_{name}" column
-        3. Write a single-row CSV with csv.DictWriter (import csv at top of file)
-        4. Create parent directories if needed
-        """
-        raise NotImplementedError("TODO: implement write_csv()")
+        row = {
+            key: json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else value
+            for key, value in report.items()
+        }
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(
+                csv_file,
+                fieldnames=list(row),
+                lineterminator="\n",
+            )
+            writer.writeheader()
+            writer.writerow(row)
 
 
 def percentile(values: Iterable[float], q: float) -> float:
+    if not 0 <= q <= 100:
+        raise ValueError("q must be between zero and one hundred")
     values_sorted = sorted(values)
     if not values_sorted:
         return 0.0

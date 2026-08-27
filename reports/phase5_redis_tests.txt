@@ -1,0 +1,114 @@
+Phase 5 - Redis shared cache and Redis reliability bonuses
+Generated: 2026-08-27 (Asia/Ho_Chi_Minh)
+
+Environment and service
+-----------------------
+UV_PROJECT_ENVIRONMENT=/home/chisq/.venvs/day25-lab25
+Redis image: redis:7-alpine
+Docker health: healthy
+$ docker compose exec -T redis redis-cli ping
+PONG
+
+Required Redis cache tests
+--------------------------
+$ uv run --no-sync pytest tests/test_redis_cache.py -v
+6 passed
+
+Required behavior verified:
+- Redis connectivity
+- atomic HSET + EXPIRE exact lookup
+- TTL expiry
+- state shared across two cache instances
+- privacy-sensitive query bypass
+- semantic false-hit rejection for different years
+
+Required plus bonus Redis tests
+-------------------------------
+$ uv run --no-sync pytest tests/test_redis_cache.py tests/test_redis_resilience.py tests/test_shared_circuit_breaker.py -q
+13 passed
+
+Bonus behavior verified:
+- Redis outage degrades to local ResponseCache
+- gateway remains available and reuses the local cache during outage
+- Redis recovery is detected and counted
+- independent prefixes remain isolated
+- 32 concurrent Redis round trips remain consistent
+- failure counters and OPEN state are shared across breaker instances
+- HALF_OPEN to CLOSED recovery is visible across breaker instances
+
+Phase 5 coverage
+----------------
+- src/reliability_lab/cache.py: 89%
+- src/reliability_lab/shared_circuit_breaker.py: 82%
+- combined: 87%
+
+Repository quality gates
+------------------------
+$ uv run --no-sync make lint
+All checks passed!
+
+$ uv run --no-sync make typecheck
+Success: no issues found in 9 source files
+
+$ uv run --no-sync make test
+89 passed, 7 xpassed in 8.69s
+
+There are no skipped Redis tests. The seven XPASS entries are the starter TODO
+tests now passing.
+
+Shared-state evidence
+---------------------
+$ uv run --no-sync python scripts/redis_evidence.py
+- Redis PING: true
+- instance B read instance A's response with score 1.0
+- shared cache key TTL: 300 seconds
+- privacy key exists: false
+- numeric false hit 2024 -> 2026 blocked: true
+- shared circuit state visible: open
+- shared failure_count: 2
+- shared circuit TTL: 300 seconds
+
+Redis keys observed with SCAN:
+- rl:evidence:cache:3169695a66ac
+- rl:evidence:cache:c54f309198be
+- rl:evidence:cb:evidence-primary
+
+Redis chaos simulation
+----------------------
+$ uv run --no-sync python scripts/run_chaos.py --config configs/redis.yaml ...
+- primary_timeout_100: PASS
+- primary_flaky_50: PASS
+- all_healthy: PASS
+- all_providers_down: PASS (100 expected static fallbacks)
+- primary_recovers: PASS
+
+Aggregate Redis metrics:
+- total requests: 500
+- expected successes/failures: 400/100
+- P50/P95/P99: 115.06 / 652.62 / 1035.66 ms
+- cache hit rate: 34.0%
+- circuit open transitions: 5
+- recovery time: 2973.49 ms (< 5000 ms SLO)
+- estimated cost: $0.106216
+- estimated cost saved: $0.099990
+
+Redis cache A/B comparison
+--------------------------
+- without cache: cost=$0.058900, throughput=27.90 req/s, P95=519.80 ms
+- with Redis cache: cost=$0.031850, throughput=49.49 req/s, P95=449.75 ms
+- cost reduction: 45.93%
+- throughput gain: 77.38%
+- P95 improvement: 70.05 ms
+
+Memory vs Redis cold-cache comparison
+-------------------------------------
+Identical sequential workload: 100 requests, seed=202601932.
+- memory: hit rate=68%, P50=2.12 ms, P95=235.36 ms, throughput=14.21 req/s
+- Redis: hit rate=68%, P50=1.48 ms, P95=239.52 ms, throughput=14.01 req/s
+- Redis overhead at P95: 4.16 ms
+
+Redis concurrency evidence
+--------------------------
+- 1 worker: 4.49 req/s
+- 8 workers: 29.43 req/s
+- measured speedup: 6.56x

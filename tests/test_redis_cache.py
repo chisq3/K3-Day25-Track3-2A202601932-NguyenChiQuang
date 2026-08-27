@@ -5,8 +5,10 @@ Start Redis with: docker compose up -d
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
 
 import pytest
+from redis.exceptions import RedisError
 
 from reliability_lab.cache import SharedRedisCache
 
@@ -19,7 +21,7 @@ def _redis_available() -> bool:
         r.ping()
         r.close()
         return True
-    except Exception:
+    except RedisError:
         return False
 
 
@@ -30,7 +32,7 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture
-def cache() -> SharedRedisCache:  # type: ignore[misc]
+def cache() -> Iterator[SharedRedisCache]:
     c = SharedRedisCache(
         redis_url="redis://localhost:6379/0",
         ttl_seconds=60,
@@ -38,7 +40,7 @@ def cache() -> SharedRedisCache:  # type: ignore[misc]
         prefix="rl:test:",
     )
     c.flush()
-    yield c  # type: ignore[misc]
+    yield c
     c.flush()
     c.close()
 

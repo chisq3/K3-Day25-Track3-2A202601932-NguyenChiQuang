@@ -1,0 +1,41 @@
+{
+  "redis_ping": true,
+  "prefix": "rl:evidence:cache:",
+  "shared_key": "rl:evidence:cache:c54f309198be",
+  "shared_state_visible": true,
+  "shared_state_score": 1.0,
+  "shared_hash": {
+    "query": "Explain shared Redis cache state",
+    "response": "Visible from both gateway instances",
+    "metadata": "{\"writer\": \"instance-a\"}"
+  },
+  "shared_key_ttl_seconds": 300,
+  "privacy_key_exists": false,
+  "numeric_false_hit_blocked": true,
+  "numeric_false_hit_score": 0.8823529411764706,
+  "false_hit_log": [
+    {
+      "query": "refund policy for 2026",
+      "cached_key": "refund policy for 2024",
+      "score": 0.8823529411764706,
+      "reason": "date_or_number_mismatch",
+      "ts": 1787812913.0334632
+    }
+  ],
+  "redis_keys": [
+    "rl:evidence:cache:3169695a66ac",
+    "rl:evidence:cache:c54f309198be",
+    "rl:evidence:cb:evidence-primary"
+  ],
+  "shared_circuit_breaker": {
+    "redis_key": "rl:evidence:cb:evidence-primary",
+    "open_visible_across_instances": true,
+    "snapshot": {
+      "state": "open",
+      "failure_count": "2",
+      "success_count": "0",
+      "opened_at_epoch": "1787812913.0367105"
+    },
+    "ttl_seconds": 300
+  }
+}

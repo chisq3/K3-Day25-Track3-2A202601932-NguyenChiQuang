@@ -1,0 +1,41 @@
+Phase 1 - Circuit Breaker verification
+Date: 2026-08-27
+Python: 3.11.15
+
+Required and bonus tests
+Command:
+  uv run --no-sync pytest tests/test_circuit_breaker.py tests/test_circuit_breaker_properties.py -v
+Result:
+  22 passed in 2.51s
+  - 12 starter Circuit Breaker tests passed
+  - 10 additional property, validation, edge-case, and concurrency tests passed
+
+TODO requirement checks
+Command:
+  uv run --no-sync pytest tests/test_todo_requirements.py -k "circuit_breaker or half_open" -v
+Result:
+  2 xpassed, 5 deselected in 0.34s
+
+Coverage
+Command:
+  uv run --no-sync pytest tests/test_circuit_breaker.py tests/test_circuit_breaker_properties.py --cov=reliability_lab.circuit_breaker --cov-report=term-missing -q
+Result:
+  22 passed in 1.48s
+  circuit_breaker.py: 99% coverage (80 statements, 1 not covered)
+
+Static quality checks
+Commands:
+  uv run --no-sync ruff check src/reliability_lab/circuit_breaker.py tests/test_circuit_breaker_properties.py
+  uv run --no-sync mypy src/reliability_lab/circuit_breaker.py tests/test_circuit_breaker_properties.py
+Results:
+  Ruff: All checks passed
+  mypy: Success, no issues found in 2 source files
+
+Full repository progress after Phase 1
+Command:
+  uv run --no-sync pytest -q
+Result:
+  13 failed, 26 passed, 6 skipped, 5 xfailed, 2 xpassed in 2.29s
+
+The remaining failures belong to the unimplemented cache and gateway phases.
+Redis tests remain skipped until the Redis phase is enabled.

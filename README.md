@@ -39,6 +39,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 
+# Option C: uv (recommended for this submission)
+# Keep the environment on a native Linux filesystem when the repo is on NTFS/exFAT.
+export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/uv-envs/day25-lab25"
+UV_LINK_MODE=copy uv sync --python 3.11 --extra dev
+
 # Start Redis for shared cache (requires Docker)
 make docker-up
 
@@ -51,6 +56,10 @@ make run-chaos
 # Generate report from metrics
 make report
 ```
+
+With Option C, prefix the Make targets with `uv run --no-sync`, for example
+`uv run --no-sync make test`. The environment path above is user-independent and avoids
+slow or unreliable virtual-environment writes when this repository is stored on NTFS/exFAT.
 
 ## What you need to implement
 
